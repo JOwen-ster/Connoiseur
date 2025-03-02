@@ -5,10 +5,18 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Constants
+BASE_DIR = os.path.dirname(__file__)
 API_TOKEN = os.getenv('DISCORD_BOT_TOKEN')
-LOGS_FOLDER = 'export'
-PROFILE_FOLDER = os.path.join(LOGS_FOLDER, 'profiles')
-INDEX_FILE_PATH = os.path.join(LOGS_FOLDER, 'index.html')
+EXPORT_FOLDER = os.path.join(BASE_DIR, 'export')
+PROFILE_FOLDER = os.path.join(EXPORT_FOLDER, 'profiles')
+INDEX_FILE_PATH = os.path.join(EXPORT_FOLDER, 'index.html')
+
+print(f'BASE_DIR: {BASE_DIR}')
+print(f'API_TOKEN: {API_TOKEN}')
+print(f'EXPORT_FOLDER: {EXPORT_FOLDER}')
+print(f'PROFILE_FOLDER: {PROFILE_FOLDER}')
+print(f'INDEX_FILE_PATH: {INDEX_FILE_PATH}')
+
 
 # Ensure folders exist
 os.makedirs(PROFILE_FOLDER, exist_ok=True)
@@ -28,6 +36,7 @@ intents.messages = True
 intents.message_content = True
 bot = commands.Bot(command_prefix='^', intents=intents, description='Chat Export Bot')
 
+
 @bot.event
 async def on_ready():
     await bot.tree.sync()
@@ -40,7 +49,7 @@ def append_to_html(content: str):
         lines = file.readlines()
 
     # Find the last </body> tag
-    for i in range(len(lines) - 1, -1, -1):
+    for i in reversed(range(len(lines))):
         if '</body>' in lines[i]:
             lines.insert(i, f'{content}\n')  # Indent messages properly
             break
