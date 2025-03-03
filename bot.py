@@ -11,9 +11,13 @@ BASE_DIR = os.path.dirname(__file__)
 EXPORT_FOLDER = os.path.join(BASE_DIR, 'export')
 INDEX_FILE_PATH = os.path.join(EXPORT_FOLDER, 'index.html')
 
+# message.guild.id: {message.channel.id: str} WHERE str = HTML File Content
+logged_guilds: dict[int, dict[int, str]] = {}
 
-def ensure_directory_and_file():
+
+def ensure_directory_and_file(message=None):
     """Ensure the export directory and index.html file exist."""
+    index_location = f'export/guild{message.guild.id}.html'
     os.makedirs(EXPORT_FOLDER, exist_ok=True)  # Create the directory if missing
 
     if not os.path.exists(INDEX_FILE_PATH):  # Create the file if missing
@@ -36,13 +40,14 @@ bot = commands.Bot(command_prefix='^', intents=intents, description='Chat Export
 
 @bot.event
 async def on_ready():
-    await bot.tree.sync()
+    botTree = await bot.tree.sync()
+    print(f'Synced {len(botTree)} commands')
     print(f'Logged in as {bot.user.name}')
 
 
-def append_to_html(content: str):
+def append_to_html(content: str, messageObject: discord.Message=None):
     """Append content right before the closing </body> tag in index.html"""
-    ensure_directory_and_file()
+    ensure_directory_and_file(message=messageObject)
     # Read existing content and set file pointer to the end using 'r'
     with open(INDEX_FILE_PATH, 'r', encoding='utf-8') as file:
         lines = file.readlines()
@@ -63,13 +68,19 @@ async def on_message(message):
     if message.author.bot:
         return
 
+    if message.guild.id not in logged_guilds:
+        logged_guilds[message.guild.id] = {}
+
+    if message.channel.id not in logged_guilds[message.guild.id]:
+        logged_guilds[message.guild.id][message.channel.id] = ''
+
     log_entry = f"\t\t<p><strong>{message.author.name}:</strong> {message.content}</p>"
 
     # Print to terminal
     print(message.content, message.attachments, message.author.id, message.author.name, message.author.display_avatar.url)
 
     # Append to index.html before the closing </body> tag
-    append_to_html(log_entry)
+    append_to_html(content=log_entry, messageObject=message)
 
 
 bot.run(API_TOKEN)
