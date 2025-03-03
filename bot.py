@@ -2,33 +2,30 @@ import discord
 from discord.ext import commands
 import os
 from dotenv import load_dotenv
+
 load_dotenv()
 
 # Constants
-BASE_DIR = os.path.dirname(__file__)
 API_TOKEN = os.getenv('DISCORD_BOT_TOKEN')
+BASE_DIR = os.path.dirname(__file__)
 EXPORT_FOLDER = os.path.join(BASE_DIR, 'export')
-PROFILE_FOLDER = os.path.join(EXPORT_FOLDER, 'profiles')
 INDEX_FILE_PATH = os.path.join(EXPORT_FOLDER, 'index.html')
 
-print(f'BASE_DIR: {BASE_DIR}')
-print(f'API_TOKEN: {API_TOKEN}')
-print(f'EXPORT_FOLDER: {EXPORT_FOLDER}')
-print(f'PROFILE_FOLDER: {PROFILE_FOLDER}')
-print(f'INDEX_FILE_PATH: {INDEX_FILE_PATH}')
 
+def ensure_directory_and_file():
+    """Ensure the export directory and index.html file exist."""
+    os.makedirs(EXPORT_FOLDER, exist_ok=True)  # Create the directory if missing
 
-# Ensure folders exist
-os.makedirs(PROFILE_FOLDER, exist_ok=True)
-
-# Create an index.html file if it doesn't exist
-if not os.path.exists(INDEX_FILE_PATH):
-    with open(INDEX_FILE_PATH, 'w', encoding='utf-8') as index_file:
-        index_file.write(
-            '<!DOCTYPE html>\n<html lang="en">\n\t<head>\n\t\t<meta charset="UTF-8">\n'
-            '\t\t<meta name="viewport" content="width=device-width, initial-scale=1.0">\n'
-            '\t\t<title>Document</title>\n\t</head>\n\n\t<body>\n\t\t<!-- Messages will be appended below -->\n\t</body>\n</html>'
-        )
+    if not os.path.exists(INDEX_FILE_PATH):  # Create the file if missing
+        with open(INDEX_FILE_PATH, 'w', encoding='utf-8') as file:
+            file.write(
+                '<!DOCTYPE html>\n<html lang="en">\n\t<head>\n\t\t<meta charset="UTF-8">\n'
+                '\t\t<meta name="viewport" content="width=device-width, initial-scale=1.0">\n'
+                '\t\t<title>Document</title>\n\t</head>\n\n\t<body>\n\t\t<!-- Messages -->\n\t</body>\n</html>'
+            )
+        print(f"Created file: {INDEX_FILE_PATH}")
+    else:
+        print(f"File already exists: {INDEX_FILE_PATH}")
 
 
 intents = discord.Intents.default()
@@ -45,16 +42,18 @@ async def on_ready():
 
 def append_to_html(content: str):
     """Append content right before the closing </body> tag in index.html"""
+    ensure_directory_and_file()
+    # Read existing content and set file pointer to the end using 'r'
     with open(INDEX_FILE_PATH, 'r', encoding='utf-8') as file:
         lines = file.readlines()
 
-    # Find the last </body> tag
+    # Find the last </body> tag and insert content
     for i in reversed(range(len(lines))):
         if '</body>' in lines[i]:
-            lines.insert(i, f'{content}\n')  # Indent messages properly
+            lines.insert(i, f'{content}\n')
             break
 
-    # Write back to the file
+    # Write updated content back
     with open(INDEX_FILE_PATH, 'w', encoding='utf-8') as file:
         file.writelines(lines)
 
