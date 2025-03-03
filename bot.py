@@ -40,7 +40,6 @@ def ensure_directory_and_file(messageObject=None):
 
 
 intents = discord.Intents.default()
-intents.messages = True
 intents.message_content = True
 bot = commands.Bot(command_prefix='^', intents=intents, description='Chat Export Bot')
 
